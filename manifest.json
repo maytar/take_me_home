@@ -1,0 +1,33 @@
+  {
+    "name": "Getting Started Example",
+    "version": "1.0",
+    "description": "Build an Extension!",
+    "permissions": ["storage", "declarativeContent", "activeTab", "tabs"],
+    "background": {
+      "scripts": ["third_party/jquery-3.3.1.min.js","background.js", "score.js"],
+      "persistent": false
+    },
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "images/get_started16.png",
+            "32": "images/get_started32.png",
+            "48": "images/get_started48.png",
+            "128": "images/get_started128.png"
+        }
+    },
+    "icons": {
+      "16": "images/get_started16.png",
+      "32": "images/get_started32.png",
+      "48": "images/get_started48.png",
+      "128": "images/get_started128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://www.facebook.com/groups/423017647874807/", "https://www.facebook.com/groups/101875683484689/", "https://www.facebook.com/groups/665278950172707/", "https://www.facebook.com/groups/1427929940815001/", "https://www.facebook.com/groups/telavivroommates/", "https://www.facebook.com/groups/718718724880874/", "https://www.facebook.com/groups/665278950172707/", "https://www.facebook.com/groups/1785602401768304/", "https://www.facebook.com/groups/jaffarent/", "https://www.facebook.com/groups/1940191366228982/"],
+            "run_at": "document_end",
+            "js": ["facebook.js"]
+        }
+    ],
+    "manifest_version": 2
+  }
