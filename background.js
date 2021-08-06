@@ -61,6 +61,7 @@ var init_scoring_first_tab = true;
 function init_scoring(response) {
     var links = ["https://www.facebook.com/groups/423017647874807/", "https://www.facebook.com/groups/101875683484689/", "https://www.facebook.com/groups/665278950172707/", "https://www.facebook.com/groups/1427929940815001/", "https://www.facebook.com/groups/telavivroommates/", "https://www.facebook.com/groups/718718724880874/", "https://www.facebook.com/groups/665278950172707/", "https://www.facebook.com/groups/1785602401768304/", "https://www.facebook.com/groups/jaffarent/", "https://www.facebook.com/groups/1940191366228982/"];
     //var links = ["https://www.facebook.com/groups/423017647874807/"];
+    console.log("init_scoring!");
     
     scoring_state = 1;
 
@@ -73,6 +74,7 @@ function init_scoring(response) {
         //do_render();
     }
 
+    console.log("init_scoring: links.forEach");
     links.forEach(link => {
         chrome.tabs.create( {url: link, active: false}, tab => {
             console.log(my_tabs);
@@ -109,7 +111,7 @@ function send_scores(response) {
 }
 
 function tab_ready(tabId, response) {
-    // called when tab is ready, should then go to the next tab
+    // called when tab is ready, should than go to the next tab
     console.log('tab_ready');
     chrome.tabs.sendMessage(tabId, {from:'bg', subject:'get_posts'}, function(res) {
         if (res == undefined) {
@@ -137,6 +139,7 @@ function tab_ready(tabId, response) {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, response) => {
+    console.log('received message');
     if (msg.from == 'popup') {
         if (msg.type == 'init')
             init_scoring(response);

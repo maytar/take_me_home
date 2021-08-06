@@ -2,13 +2,15 @@
 var posts = [];
 var ready = false;
 
-function see_more(post) {
+function see_more(feed) {
 	try {
-        var see_more = post.querySelectorAll('[role="button"]')[0];
-        see_more.click();
+        var buttons = feed.querySelectorAll('[role="button"]');
+        buttons.forEach(function(node) {
+            if (node.innerText == 'See More') node.click();
+        });
     }
     catch (e) {
-    	return;
+        console.log("Failed in pressing the see more buttons");
     }
 }
 
@@ -41,38 +43,70 @@ function get_time_from_str(time_str) {
 }
 
 function get_dom_tree_succesor(elem, ind_list) {
-	for (const i of ind_list)
-		elem = elem.children[i];
-	return elem;
+    let res = elem;
+    let k = 0;
+
+    for (const i of ind_list) {
+        res = res.children[i];
+
+        if (res == undefined)
+            return res;
+    }
+
+	return res;
 }
 
+// Helper functionn to use from the browser to get the path to the different elements
+function getpath(anc, suc) {
+    let indices = [];
+    do {
+        let parent = suc.parentElement;
+        let i  = Array.prototype.indexOf.call(parent.children, suc);
+        indices.push(i);
+        console.log(i);
+        suc = parent;
+    } while(suc.parentElement != anc);
+    return indices.reverse();
+}
+
+PATH_TO_BASE_ELEM = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0];
+PATH_FROM_BASE_TO_USERNAME = [ 1, 0, 1, 0, 0, 0, 0, 0 ];
+PATH_FROM_BASE_TO_TIME = [ 1, 0, 1, 0, 1, 0, 0, 1];
+PATH_FROM_BASE_TO_POST_ELEM = [ 2, 0, 0, 0, 0, 0, 0];
+//PATH_FROM_POST_TO_TITLE = ;
+//PATH_FROM_POST_TO_DATA = ;
+//PATH_FROM_BASE_TO_URL = [];
+
 function get_post_data(elem) {
-	elem = get_dom_tree_succesor(elem, [0, 0, 0, 0, 0, 0, 0, 1]);
+    console.log(elem);
+	elem = get_dom_tree_succesor(elem, PATH_TO_BASE_ELEM);
+    if (elem == undefined)
+        return undefined;
+    console.log(elem);
+
     let post, title, username, time;
 	let url = '';
-    for (let i = 1; i <= 3; i++) {
-        try {
-            username = get_dom_tree_succesor(elem, [i, 0, 1, 0, 0, 0]);
+    try {
+        username = get_dom_tree_succesor(elem, PATH_FROM_BASE_TO_USERNAME);
+        console.log("Got username ", username);
 
-            time = get_dom_tree_succesor(elem, [i, 0, 1, 0, 1, 0, 1]);
-            console.log(time);
+        console.log("Getting time");
+        time = get_dom_tree_succesor(elem, PATH_FROM_BASE_TO_TIME);
+        console.log(time);
 
-            let post_title_elem = get_dom_tree_succesor(elem, [i+1, 0, 0, 0, 0]); 
-            title = get_dom_tree_succesor(post_title_elem, [0, 0, 0, 0]); 
-            post = get_dom_tree_succesor(post_title_elem, [1]); 
+        let time_link = time.querySelectorAll('[role="link"]')[0];
+        time_link.focus();
 
-            try {
-                url = get_dom_tree_succesor(elem, [i+1, 0, 2]).querySelectorAll('[role="link"]')[0].href;
-                url = url.match(/(.*\/listing\/[0-9]+).*/)[1];
-            }
-            catch (e) {
-                continue;
-            }
-            break;
-        }
-        catch (e) {
-            continue;
-        }
+        //console.log("Getting title");
+        //title = get_dom_tree_succesor(post_title_elem, [0, 0, 0, 0]); 
+        post = get_dom_tree_succesor(elem, PATH_FROM_BASE_TO_POST_ELEM); 
+        console.log("Got post", post);
+
+        url = time.querySelectorAll('[role="link"]')[0].href;
+        console.log("Got url", url);
+        //url = url.match(/(.*\/listing\/[0-9]+).*/)[1];
+    }
+    catch (e) {
     }
     if (post == undefined) {
     	post = document.createElement('p');
@@ -81,15 +115,15 @@ function get_post_data(elem) {
     if (title == undefined) {
         title = document.createElement('p');
     }
-    see_more(post);
 	
 	let time_delta;
 	try {
 		post = post.innerText;
 		title = title.innerText;
 		username = username.innerText;
-		time_delta = get_time_from_str(time.innerText);
-		time = time.innerText;
+        let time_str = time.innerText.replace('-', '');
+		time_delta = get_time_from_str(time_str);
+		time = time_str;
 	}
 	catch(e) {
         console.log('returns undeinged');
@@ -123,9 +157,17 @@ function load_more_items() {
     window.scrollTo(0,document.body.scrollHeight);
 }
 
+function jitter_scrolling() {
+    window.scrollTo(0,0);
+    window.scrollTo(0,document.body.scrollHeight);
+}
+
 async function timer_func () {
     var feed = document.querySelectorAll('[role="feed"]')[0];
     var res;
+
+    //load_more_items();
+    //await sleep(2000);
 
 	if (feed == undefined) {
 		console.log('feed is undefined reinitiating timer');
@@ -133,19 +175,31 @@ async function timer_func () {
 		return;
 	}
 
-    res = get_posts(feed, 1); // posts in the feed element start from children 1
-    posts = posts.concat(res.posts);
+    console.log(feed);
+    //res = get_posts(feed, 1); // posts in the feed element start from children 1
+    //posts = posts.concat(res.posts);
 
-	console.log(res);
-    while (res.index < 100) {
+    let cur_children_num = feed.children.length;
+    while (cur_children_num < 8) {
+        cur_children_num = feed.children.length;
         load_more_items();
-        while (feed.children.length-1 == res.index)
+        let count = 0;
+        while (feed.children.length-1 <= cur_children_num) {
             await sleep(1000);
-
-        res = get_posts(feed, res.index);
-		console.log(res);
-        posts = posts.concat(res.posts);
+            count += 1;
+            if (count == 10) {
+                count = 0;
+                jitter_scrolling();
+            }
+        }
     }
+    await sleep(3000);
+    see_more(feed);
+    await sleep(1000);
+
+    res = get_posts(feed, 1);
+    console.log(res);
+    posts = posts.concat(res.posts);
 
     console.log('done');
 
