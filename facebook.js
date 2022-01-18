@@ -121,7 +121,7 @@ function get_post_data(elem) {
 		post = post.innerText;
 		title = title.innerText;
 		username = username.innerText;
-        let time_str = time.innerText.replace('-', '');
+        let time_str = time.innerText.replaceAll('-', '');
 		time_delta = get_time_from_str(time_str);
 		time = time_str;
 	}
@@ -157,8 +157,9 @@ function load_more_items() {
     window.scrollTo(0,document.body.scrollHeight);
 }
 
-function jitter_scrolling() {
+async function jitter_scrolling() {
     window.scrollTo(0,0);
+    await sleep(500);
     window.scrollTo(0,document.body.scrollHeight);
 }
 
@@ -180,7 +181,7 @@ async function timer_func () {
     //posts = posts.concat(res.posts);
 
     let cur_children_num = feed.children.length;
-    while (cur_children_num < 8) {
+    while (cur_children_num < 50) {
         cur_children_num = feed.children.length;
         load_more_items();
         let count = 0;

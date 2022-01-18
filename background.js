@@ -97,8 +97,14 @@ function get_state(response) {
 
 function close_tabs(response) {
     console.log('closing tabs');
-    /*for (let i = 0; i < my_tabs.length; i++)
-        chrome.tabs.remove(my_tabs[i].tab.id);*/
+    for (let i = 0; i < my_tabs.length; i++) {
+        try {
+            chrome.tabs.remove(my_tabs[i].tab.id);
+        }
+        catch(e) {
+            continue;
+        }
+    }
     my_tabs = [];
     scores = [];
     scoring_state = 0;
@@ -133,7 +139,11 @@ function tab_ready(tabId, response) {
 
     console.log(my_tabs[current_tab_i]);
     console.log(my_tabs);
-    chrome.tabs.remove(my_tabs[current_tab_i].tab.id);
+    try {
+        //chrome.tabs.remove(my_tabs[current_tab_i].tab.id);
+        chrome.tabs.remove(tabId);
+    }
+    catch (e) {}
     if (current_tab_i + 1 != my_tabs.length)
         chrome.tabs.update(my_tabs[++current_tab_i].tab.id, {active:true}, function(tab){ });
 }
